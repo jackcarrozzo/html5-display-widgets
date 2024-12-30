@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <title>Awesome Plane Viewer</title>
+    </head>
+    <link href="css.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="attitude.js"></script>
+    <script type="text/javascript" src="airspeed.js"></script>
+    <script type="text/javascript" src="altitude.js"></script>
+    <script type="text/javascript" src="vario.js"></script>
+    <script type="text/javascript" src="hsi.js"></script>
+    <script type="text/javascript" src="bargraph.js"></script>
+    <script type="text/javascript" src="aoa.js"></script>
+    <script type="text/javascript" src="map.js"></script>
+    <script type="text/javascript">
+
+    var aa=new AttitudeIndicator({});
+    var asi=new AirspeedIndicator({});
+    var alt=new AltitudeIndicator({});
+    var vario=new VarioIndicator({});
+    var hsi=new HorizSituIndicator({});
+    var bg0=new BarGraph({dir: "horiz"});
+    var aoa0=new AngleOfAttackIndicator({});
+    var map0=new MyMap({});
+
+    function init() {
+        aa.setup();
+        aa.render();
+
+        asi.setup();
+        asi.render();
+
+        alt.setup();
+        alt.render();
+
+        vario.setup();
+        vario.render();
+
+        hsi.setup();
+        hsi.render();
+
+        bg0.setup();
+        bg0.render();
+
+        aoa0.setup();
+        aoa0.render();
+
+        map0.setup();
+        map0.render();
+
+        render_dt();
+    }
+
+    var dt_data={
+        voltage: 7.4,
+        current: 25.1,
+        heading: 330,
+        groundtrack: 320,
+        groundspeed: 23.3,
+        airspeed: 35,
+        vsi: 70
+    };
+
+    var dt_elements=[
+        {key: 'voltage', lbl: 'Voltage'},
+        {key: 'current', lbl: 'Current'},
+        {key: 'heading', lbl: 'Heading'},
+        {key: 'groundtrack', lbl: 'Ground Track'},
+        {key: 'groundspeed', lbl: 'Ground Speed'},
+        {key: 'airspeed', lbl: 'Air Speed'},
+        {key: 'vsi', lbl: 'Vertical Speed'}
+    ];
+
+    function render_dt() {
+        var dt=document.getElementById("datatable0");
+
+        //dt.innerHTML="<tr><td>thing</td><td>other thing</td></tr>";
+
+        var i;
+        var even=0;
+        var trclass;
+        for (i=0;i<dt_elements.length;i++) {
+            var lbl=dt_elements[i].lbl;
+            var val=dt_data[dt_elements[i].key];
+
+            if (even) {
+                trclass="bg1";
+                even=0;
+            } else {
+                trclass="bg0";
+                even=1;
+            }
+
+            dt.innerHTML+="<tr class=\""+trclass+"\"><td align=\"right\"><strong>"+lbl+"</strong></td><td align=\"center\">"+val+"</td></tr>";
+        }
+    }
+
+    </script>
+
+    <body onload="init();" bgcolor="#666">
+        <div id="firstholder" style="border:1px solid #fff">
+            <div id="airspeed0" style="display:inline-block;"></div>
+            <div id="attitude0" style="display:inline-block;"></div>
+            <div id="altitude0" style="display:inline-block;"></div>
+
+        <br>
+
+            <div id="elk" style="display:inline-block;">
+                <div id="aoa0" style="display:inline-block;"></div>
+                <table id="datatable0" class="datatable" ></table>
+            </div>
+        </div>
+
+        <div id="vario0" style="display:inline-block;"></div>
+        <div id="hsi0" style="display:inline-block;"></div>
+        <div id="bargraph0"></div>
+        <div id="map0"></div>
+    </body>
+</html>

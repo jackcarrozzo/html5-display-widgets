@@ -1,0 +1,101 @@
+<html>
+    <head>
+        <title>Awesome Gauge Viewer</title>
+    </head>
+    <link href="css.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="gauge.js"></script>
+    <script type="text/javascript">
+
+    var lineconfs={
+        mainind: {key: 'valuea', color: '#33ff66'}, // green
+        secind:  {key: 'valueb', color: '#33ffee', width: 3}, // blue
+        thirdind: {key: 'valuec', color: '#ffbb33'}, // orange
+        fourthind:  {key: 'valued', color: '#ff3333'} // red
+    };
+
+    var marks={
+        //redarc: {type: 'arc', startval: 45, endval: 95,
+        //    radoffset: 5, width: 10, color: '#ff0000'},
+        whitearc: {type: 'arc', startval: 10, endval: 35,
+            radoffset: 10, width: 20, color: '#ffffff'},
+        fullred: {type: 'arc', startval: 0, endval: 100,
+            radoffset: 30, width: 30, color: '#aa3333'},
+        greenarc: {type: 'arc', startval: 20, endval: 30,
+            radoffset: 50, width: 30, color: '#33aa33'}
+    };
+
+    var gg=[
+        new Gauge({id: 'gauge0', indicators: lineconfs}),
+        new Gauge({id: 'gauge1', indicators: lineconfs, marks: marks, bgcolor: '#111111'}),
+        new Gauge({id: 'gauge2', valuemax:120, indicators: lineconfs, marks: marks}),
+        new Gauge({id: 'gauge3', valuemax:120, indicators: lineconfs, marks: marks}),
+        new Gauge({id: 'gauge4', indicators: lineconfs, marks: marks}),
+        new Gauge({
+            id: 'gauge5',
+            marks: {
+                redarc: {type: 'arc', startval: 45, endval: 95,
+                    radoffset: 5, width: 10, color: '#ff0000'},
+                whitearc: {type: 'arc', startval: 10, endval: 35,
+                    radoffset: 10, width: 20, color: '#ffffff'},
+                fullred: {type: 'arc', startval: 0, endval: 100,
+                    radoffset: 30, width: 30, color: '#aa3333'},
+                greenarc: {type: 'arc', startval: 20, endval: 30,
+                    radoffset: 50, width: 30, color: '#33aa33'}},
+            indicators: {
+                mainind: {key: 'valuea', color: '#33ff66'}, // green
+                secind:  {key: 'valueb', color: '#33ffee', width: 3}, // blue
+                thirdind: {key: 'valuec', color: '#ffbb33'}, // orange
+                fourthind:  {key: 'valued', color: '#ff3333'} // red
+            }
+        })
+    ];
+
+    var currval=0;
+    var currdir=1;
+
+    function init() {
+        gg[0].data.valuea=1;
+        gg[1].data.valuea=20;
+        gg[2].data.valuea=40;
+        gg[3].data.valuea=60;
+        gg[4].data.valuea=80;
+        gg[5].data.valuea=99;
+
+        for (i in gg) {
+            gg[i].setup();
+            gg[i].render();
+        }
+
+        setTimeout(startsweep, 10000);
+    }
+
+    function startsweep() {
+        console.log("starting sweep");
+        setInterval(render_cb, 100);
+    }
+
+    function render_cb() {
+        for (i in gg) {
+            gg[i].update({valuea: currval, valueb: currval-5, valuec: currval+5, valued: currval+10});
+        }
+
+        if (1==currdir) {
+            currval++;
+            if (currval>=100) currdir=0;
+        } else {
+            currval--;
+            if (currval<=0) currdir=1;
+        }
+    }
+   
+    </script>
+    
+    <body onload="init();" bgcolor="#666">
+        <div id="gauge0" style="display:inline-block;"></div> 
+        <div id="gauge1" style="display:inline-block;"></div> 
+        <div id="gauge2" style="display:inline-block;"></div> 
+        <div id="gauge3" style="display:inline-block;"></div>
+        <div id="gauge4" style="display:inline-block;"></div>
+        <div id="gauge5" style="display:inline-block;"></div>
+    </body>
+</html>
