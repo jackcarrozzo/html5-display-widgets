@@ -7,6 +7,25 @@
     <script type="text/javascript" src="data/wfdata.js"></script>
     <script type="text/javascript">
 
+    var do_websox=true;
+
+    function handle_ws_msg(msg) {
+        var m=JSON.parse(msg.data);
+        console.log("got via ws: ",m);
+
+        wf.updatesingle(m);
+    }
+
+
+    if (do_websox) {
+        var uri="ws://localhost:5070/";
+
+         console.log("attempting ws connection to ",uri);
+         const ws = new WebSocket(uri);
+         ws.addEventListener('message', handle_ws_msg);
+         console.log("ws ok?",ws);
+    }
+
 
     var lineconfs={
         mainind: {key: 'valuea', color: '#33ff66'}, // green

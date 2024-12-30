@@ -5,7 +5,8 @@ function Waterfall(conf) {
         width: conf.width || 1200,
         style:  conf.style  || "border:1px solid #fff;",
         dir: conf.dir || "vertical",
-        bgcolor: conf.bgcolor || "#444"
+        bgcolor: conf.bgcolor || "#444",
+        max_wf_rows: conf.max_wf_rows || 600
     };
 
     this.setup = function() {
@@ -30,22 +31,25 @@ function Waterfall(conf) {
 
 		this.vmin=0;
 		this.vmax=0;
+
+        this.datacrb=[];
     };
 
 	// TODO: set max number of slices to show regardless of size of list in;
 	//   slide new slices into their right spot as they arrive
 
-    this.setminmaxes = function(slicesobj) {
-        console.log("setminmaxes: got ",slicesobj);
+    this.setminmaxes = function(data_ar) {
+        console.log("setminmaxes: got ",data_ar);
 
 		var xmin,xmax,ymin,ymax,vmin,vmax;
         this.xmin=0;
 		this.ymin=0;
-		this.xmax=slicesobj.fft_bin_slices[0].length; // num bins per fft
-		this.ymax=slicesobj.fft_bin_slices.length;    // num fftslices (TODO: shift over as new stuff comes in)
-		
+		this.xmax=data_ar[0].length; // num bins per fft
+		//this.ymax=slicesobj.fft_bin_slices.length;    // num fftslices (TODO: shift over as new stuff comes in)
+		this.ymax=this.conf.max_wf_rows;
+
 		this.vmin=0;
-		this.vmax=this.find_slices_max(slicesobj.fft_bin_slices);
+		this.vmax=this.find_slices_max(data_ar);
 
 		this.winxmin=5; // TODO: configize
 		this.winymin=5;
@@ -105,12 +109,62 @@ function Waterfall(conf) {
 		return max;
 	}
 
-	this.update = function(slicesobj) {
-		this.setminmaxes(slicesobj);
+    this.updatesingle = function(u) {
+        this.datacrb.push(u.fft_bin_mags);
 
-		this.render(slicesobj);
+        if (this.datacrb.length>this.conf.max_wf_rows)
+            this.datacrb.shift();
+
+        console.log("updatesingle: crb is ",this.datacrb);
+
+        this.setminmaxes(this.datacrb);
+        this.rollingrender(this.datacrb);
+    }
+
+    
+	this.update = function(slicesobj) { // takes an array of slices and plots them at once
+        console.log(".update() got: ",slicesobj);
+
+        this.setminmaxes(slicesobj.fft_bin_slices); // TODO:
+
+		this.rollingrender(slicesobj); // here too^
 	}
 
+    this.rollingrender = function(data_ar) {
+        this.canvasctx.clearRect(0,0,
+            this.canvasobj.width, this.canvasobj.height);
+
+        var ctx = this.canvasctx;
+
+        ctx.fillRect(10, 20, 150, 100);
+
+
+        var valwidth= this.x2chart(2)-this.x2chart(1);
+        var valheight=1+this.y2chart(1)-this.y2chart(2);
+
+        console.log("valwidth is ",valwidth,", valheight is ",valheight);
+
+        
+        for (var s=(data_ar.length-1);s>=0;s--) {
+            for (var bin=0;bin<data_ar[0].length;bin++) {
+                var thisx=this.x2chart(bin);
+                var thisy=this.y2chart((this.conf.max_wf_rows-1)-s);
+                var thisv=this.datacrb[s][bin];
+
+                ctx.fillStyle=`rgb(
+                    ${Math.floor(this.valscale(thisv))}
+                    ${Math.floor(this.valscale(thisv))}
+                    ${Math.floor(this.valscale(thisv))}
+                )`;
+                ctx.fillRect(thisx, thisy, valwidth, valheight); // xwidth yheight
+            }
+        }
+
+        ctx.fillStyle="rgb(50,255,0,50%)";
+        ctx.fillRect(10, 20, 150, 100);
+    }
+
+    // TODO:
     this.render = function(slicesobj) {
         this.canvasctx.clearRect(0,0,
 			this.canvasobj.width, this.canvasobj.height);
