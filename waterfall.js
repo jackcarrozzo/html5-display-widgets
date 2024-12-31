@@ -21,25 +21,37 @@ function Waterfall(conf) {
         this.canvasobj.setAttribute("height", this.conf.height);
         this.canvasobj.setAttribute("style", this.conf.style);
 
-        this.data = [
-            {x: -72.4, y: 42.43, v:0.5},
-            {x: -72.42, y: 42.233, v:0.2},
-            {x: -72.4235, y: 42.63, v:0.25},
-            {x: -72.41, y: 42.343, v:0.7},
-            {x: -72.458, y: 42.3846, v:0.95},
-        ];
-
-		this.vmin=0;
-		this.vmax=0;
-
         this.datacrb=[];
+        this.rowsupdated=-1;
+
+        this.metadata={
+            lastn: 0,
+            samplefreq: 44100,
+            triggerfreq: 100,
+            winlength: 0.008
+        };
+
+        this.vmin=0;
+        this.vmax=0;
+
+        this.xmin=0;
+        this.ymin=0;
+        this.xmax=(this.datacrb.length>0)?this.datacrb[0].length:256;
+        this.ymax=this.conf.max_wf_rows;
+
+        this.winxmin=5; // TODO: configize
+        this.winymin=5;
+        this.winxmax=this.canvasobj.width-5;
+        this.winymax=this.canvasobj.height-5;
     };
 
 	// TODO: set max number of slices to show regardless of size of list in;
 	//   slide new slices into their right spot as they arrive
 
     this.setminmaxes = function(data_ar) {
-        console.log("setminmaxes: got ",data_ar);
+        //console.log("setminmaxes: got ",data_ar);
+
+        if (data_ar.length<1) return;
 
 		var xmin,xmax,ymin,ymax,vmin,vmax;
         this.xmin=0;
@@ -56,9 +68,9 @@ function Waterfall(conf) {
 		this.winxmax=this.canvasobj.width-5;
 		this.winymax=this.canvasobj.height-5;
 
-		console.log("scaling vals from ",this.vmin," to ",this.vmax);
-		console.log("from x ",this.xmin," to ",this.xmax," over ",this.winxmin," to ",this.winxmax);
-		console.log("and  y ",this.ymin," to ",this.ymax," over ",this.winymax," to ",this.winymin);
+		//console.log("scaling vals from ",this.vmin," to ",this.vmax);
+		//console.log("from x ",this.xmin," to ",this.xmax," over ",this.winxmin," to ",this.winxmax);
+		//console.log("and  y ",this.ymin," to ",this.ymax," over ",this.winymax," to ",this.winymin);
     };
 
     this.x2chart = function(x) {
@@ -109,46 +121,51 @@ function Waterfall(conf) {
 		return max;
 	}
 
-    this.updatesingle = function(u) {
-        this.datacrb.push(u.fft_bin_mags);
+    // push array of fft values onto front of crb
+    // shift one out the end if full length is reached
+    this.updatesingle = function(row_ar) {
+        this.datacrb.push(row_ar);
+        this.rowsupdated++;
 
         if (this.datacrb.length>this.conf.max_wf_rows)
             this.datacrb.shift();
 
-        console.log("updatesingle: crb is ",this.datacrb);
-
-        this.setminmaxes(this.datacrb);
-        this.rollingrender(this.datacrb);
+        //console.log("updatesingle: ",row_ar);
     }
 
-    
-	this.update = function(slicesobj) { // takes an array of slices and plots them at once
-        console.log(".update() got: ",slicesobj);
+    // iterate .fft_bin_slices and stick each one into crb
+	this.update = function(slices_ar) {
+        //console.log(".update() got: ",slicesobj);
 
-        this.setminmaxes(slicesobj.fft_bin_slices); // TODO:
+	    for (var i in slices_ar) {
+            this.updatesingle(slices_ar[i]);
+        }
+    }
 
-		this.rollingrender(slicesobj); // here too^
-	}
+    // render the whole datacrb across the window (if exists)
+    this.render = function() {
+        if (this.rowsupdated==0) return; // dont bother rendering if no new data
 
-    this.rollingrender = function(data_ar) {
+        var data_ar=this.datacrb;
+
+        this.setminmaxes(data_ar);
+
         this.canvasctx.clearRect(0,0,
             this.canvasobj.width, this.canvasobj.height);
 
         var ctx = this.canvasctx;
 
-        ctx.fillRect(10, 20, 150, 100);
-
-
         var valwidth= this.x2chart(2)-this.x2chart(1);
         var valheight=1+this.y2chart(1)-this.y2chart(2);
 
-        console.log("valwidth is ",valwidth,", valheight is ",valheight);
-
+        //console.log("valwidth is ",valwidth,", valheight is ",valheight);
         
-        for (var s=(data_ar.length-1);s>=0;s--) {
-            for (var bin=0;bin<data_ar[0].length;bin++) {
+        //for (var s=(data_ar.length-1);s>=0;s--) { // from oldest slice to latest
+        for (var s=0;s<data_ar.length;s++) {
+            for (var bin=0;bin<data_ar[0].length;bin++) { // for each bin left to right
                 var thisx=this.x2chart(bin);
-                var thisy=this.y2chart((this.conf.max_wf_rows-1)-s);
+                //var thisy=this.y2chart((this.conf.max_wf_rows-1)-s);
+                var thisy=this.y2chart(s+(this.conf.max_wf_rows-data_ar.length)); // grow from top
                 var thisv=this.datacrb[s][bin];
 
                 ctx.fillStyle=`rgb(
@@ -159,44 +176,30 @@ function Waterfall(conf) {
                 ctx.fillRect(thisx, thisy, valwidth, valheight); // xwidth yheight
             }
         }
-
-        ctx.fillStyle="rgb(50,255,0,50%)";
-        ctx.fillRect(10, 20, 150, 100);
+        this.render_box(ctx);
     }
 
-    // TODO:
-    this.render = function(slicesobj) {
-        this.canvasctx.clearRect(0,0,
-			this.canvasobj.width, this.canvasobj.height);
+    this.render_box = function(ctx) {
+        var width=250;
+        var height=120;
+        var from_right=100;
+        var from_bottom=100;
 
-        var ctx = this.canvasctx;
+        var xcorner=this.canvasobj.width-(width+from_right);
+        var ycorner=this.canvasobj.height-(height+from_bottom);
 
-		ctx.fillRect(10, 20, 150, 100);
-
-		//TODO: make cleaner
-		var valwidth= this.x2chart(2)-this.x2chart(1);
-		var valheight=1+this.y2chart(1)-this.y2chart(2);
-
-		console.log("valwidth is ",valwidth,", valheight is ",valheight);
-
-		for (var s=0;s<slicesobj.fft_bin_slices.length;s++) {
-			for (var bin=0;bin<slicesobj.fft_bin_slices[0].length;bin++) {
-				var thisx=this.x2chart(bin);
-				var thisy=this.y2chart(s);
-				var thisv=slicesobj.fft_bin_slices[s][bin];
-
-				ctx.fillStyle=`rgb(
-					${Math.floor(this.valscale(thisv))}
-					${Math.floor(this.valscale(thisv))}
-					${Math.floor(this.valscale(thisv))}
-				)`;
-				ctx.fillRect(thisx, thisy, valwidth, valheight); // xwidth yheight
-			}
-		}
-
-		ctx.fillStyle="rgb(50,255,0,50%)";
-		ctx.fillRect(10, 20, 150, 100);
-
-
-    };
+        ctx.fillStyle="rgb(100,255,30,30%)";
+        //ctx.fillRect(10, 20, 150, 100);
+        ctx.fillRect(xcorner, ycorner,
+                width, height);
+        
+        // TODO:
+        ctx.font = "16px Courier New";
+        ctx.fillStyle="rgb(255,255,255,70%)";
+        ctx.fillText("n:            "+this.metadata.lastn,xcorner+10,ycorner+20);
+        ctx.fillText("fft bins:     "+this.datacrb[0].length,xcorner+10,ycorner+40);
+        ctx.fillText("window len:   ",xcorner+10,ycorner+60);
+        ctx.fillText("trigger freq: ",xcorner+10,ycorner+80);
+        ctx.fillText("sample freq:  "+this.metadata.samplefreq+" hz",xcorner+10,ycorner+100);
+    }
 }

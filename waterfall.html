@@ -11,9 +11,14 @@
 
     function handle_ws_msg(msg) {
         var m=JSON.parse(msg.data);
-        console.log("got via ws: ",m);
+        //console.log("got via ws: ",m);
 
-        wf.updatesingle(m);
+        //console.log(m.n);
+
+        wf.metadata.lastn=m.n||-1;
+        wf.metadata.samplefreq=m.sample_rate_hz||-1;
+        
+        wf.update(m.fft_bin_slices);
     }
 
 
@@ -78,9 +83,15 @@
 
         wf.setup();
 
-        wf.update(waterfalldata);
+        //wf.update(waterfalldata.fft_bin_slices);
+        //console.log("waterfalldata is",waterfalldata);
 
         //setTimeout(startsweep, 10000);
+        setInterval(do_render,200);
+    }
+
+    function do_render() {
+        wf.render();
     }
 
     function startsweep() {
