@@ -1,0 +1,234 @@
+<html><head><title>gt</title>
+<link href="../../css.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="chart.js"></script>
+<script type="text/javascript" src="data/fmcwsums.js"></script>
+
+
+<script type="text/javascript">
+ <!--
+ var baseurl="http://localhost:8802";
+ //var baseurl="http://11.0.0.12:8802";
+
+ function load_data() {
+   xmlhttp = new XMLHttpRequest();
+   xmlhttp.onreadystatechange=function() {
+     if (xmlhttp.status==200) {
+       if (xmlhttp.readyState==4) {
+         console.log("looks like we got data:",xmlhttp.responseText);
+         var data=JSON.parse(xmlhttp.responseText);
+         parse_and_load(data);
+       } else {
+         //console.log("hi from readystate", xmlhttp.readyState);
+       }
+     } else {
+       console.log("something wacked happened man:",
+                   xmlhttp.status,xmlhttp.responseText);
+     }
+   };
+   xmlhttp.open("GET", baseurl+"/dflat/elk", true);
+   xmlhttp.send();
+ }
+
+ var moving_ds={
+     "t9":[]
+ };
+
+ function parse_and_load(d) {
+     var i;
+     var ds_name;
+
+    //console.log("hoping to load",(d.length/2),"datasets.");
+		console.log("parse and load got",d);
+
+     /*for (i=0;i<d.length;i+=2) {
+         if (!(d[i+1])) {
+             console.log("expected a pair, but seem to be odd at ind",i);
+             return;
+         }
+         console.log("ind",i);
+         console.log("loading ds",d[i],"of",d[i+1].length,"pts.");
+
+         moving_ds[d[i]]=d[i+1];
+     }
+
+     console.log("done. moving ds:",moving_ds);
+		*/
+
+     Charts[0].update("p0",d["p0"]);
+     Charts[0].update("p1",d["p1"]);
+     Charts[0].update("t0",d["t0"]);
+     //Charts[0].update("t1",moving_ds["t1"]);
+     //Charts[0].update("t2",moving_ds["t2"]);
+
+     /*for (i in Charts) {
+        Charts[i].refresh();
+        }*/
+ }
+
+ /*new Chart({
+    id:"chart0",
+    height:800,
+    width:1200,
+    y_axes:{
+    "md": {
+    p_miny:0,
+    p_maxy:60
+    },
+    "ind":{
+    p_miny:0.5,
+    p_maxy:1.5
+    },
+    "pr":{
+    p_miny:0.0
+    }
+    }
+    },
+    name: "xiv",
+    color: "#cc99ff",
+    ptsize:2,
+    linesize:2,
+    y_axis:"md",
+    //p_miny:0,
+    //p_maxy:60,
+    values: xiv||[]
+  */
+
+ var Charts=[
+     new Chart({
+         id: "chart0",
+         height: 700,
+         width: 1200,
+         single_x_axis: true,
+         y_axes:{
+             "temp": {
+                 p_miny:0.0,
+                 //p_maxy:60
+             },
+             "pr":{
+                 p_miny:0.0
+             }
+         }
+     },[{
+       type: "xy",
+       name: "p0",
+       y_axis: "pr",
+       color: "#00ff66",
+       ptsize: 4,
+       linesize: 2,
+	   //p_miny: 1,
+       //p_minx:0,
+       //x_propname: "ts",
+       //y_propname: "v"
+     },{
+       type: "xy",
+       name: "p1",
+       y_axis: "pr",
+       color: "#00ffaa",
+       ptsize: 5,
+       //p_miny: 1,
+       //p_minx:0,
+       x_propname: "ts",
+       y_propname: "v"
+     },{
+       type: "xy",
+       name: "t0",
+       y_axis: "temp", // !!!!!! cust axes
+       color: "#ff8800",
+       ptsize: 5,
+       //p_miny: 1,
+       x_propname: "ts",
+       y_propname: "v"
+     },{
+       type: "xy",
+       name: "t1",
+       y_axis: "temp",
+       color: "#eeaa00",
+       ptsize: 1,
+       //p_miny: 1,
+       x_propname: "ts",
+       y_propname: "v"
+     },{
+       type: "xy",
+       name: "t2",
+       y_axis: "temp",
+       color: "#bbaa00",
+       ptsize: 1,
+       //p_miny: 1,
+       x_propname: "ts",
+       y_propname: "v"
+     }
+    ]),
+    new Chart({
+        id: "chart1",
+        height: 500
+    },[{
+        type: "xy",
+        name: "thing",
+        color: "#00ff66",
+        ptsize: 20,
+        x_propname: "ts",
+        y_propname: "v",
+        values: moving_ds["t9"]
+    },{
+        type: "xy",
+        name: "thing 2",
+        color: "#ff0000",
+        ptsize: 10,
+        values:[
+            {x:1.5, y:3.5},
+            {x:2.5, y:4},
+            {x:3.5, y:1.5}
+        ]}])
+ ];
+
+function make_fft_data() {
+	console.log("loading %d fft pts, %d hs sr.",
+		fftdata.fft_length, fftdata.sample_rate_hz);
+
+	var i,r=[];
+	for (i=0; i<fftdata.fft_length; i++) {
+		r[i]={x: fftdata.x_axis_m[i], y: fftdata.fft_bin_sums[i]}
+	}
+
+	return r;
+}
+
+function init() {
+    console.log("hi, init.");
+
+     //load_data();
+
+    var i;
+    for (i in Charts) {
+        Charts[i].setup();
+    }
+
+	var munged_ar=make_fft_data();
+	Charts[0].update("p0", munged_ar);
+
+     Charts[1].update("thing 2",
+                      [
+                          {x:1.5, y:3.5},
+                          {x:2.5, y:4},
+                          {x:3.5, y:1.5}
+                      ]);
+}
+
+ function bump() {
+     console.log("hey i got clicked");
+
+     Charts[1].update("thing 2",
+                      [{x:4.0, y:2.2}]);
+
+     load_data();
+ }
+
+-->
+</script></head>
+<body bgcolor="black" onload="init();">
+<div id="chart0"></div>
+<div id="chart1"></div>
+
+<button onclick="bump()">bump</button>
+
+</body></html>
