@@ -11,6 +11,7 @@ function Chart(conf, plots) {
         height:  conf.height  || 200,
         width:  conf.width  || 800,
         style:  conf.style  || "border:1px solid #fff",
+        bgcolor: conf.bgcolor || "#111111",
         debug:  conf.debug  || true, // TODO:
         xmargin: conf.xmargin || 4,
         ymargin: conf.ymargin || 5,
@@ -22,6 +23,7 @@ function Chart(conf, plots) {
         legend_x_margin: conf.legend_x_margin || 5,
         legend_y_margin: conf.legend_y_margin || 5,
         legend_ptsize: conf.legend_ptsize || 8,
+        units: conf.units || 'sec', // TODO:
         legend_alpha: conf.legend_alpha || 0.7
     };
 
@@ -218,14 +220,17 @@ function Chart(conf, plots) {
     };
 
     this.update = function (plotname, newvalues) {
-        console.log(this.conf.divid, plotname, "being refreshed with new pts:", newvalues.length);
+        //console.log(this.conf.divid, plotname, "being refreshed with new pts:", newvalues.length);
 
         this.merge_new_data(plotname, newvalues);
 
         //console.log("data merged, plotting:",this.plots[this.find_plot_by_name(plotname)]);
 
         this.canvasctx.clearRect(0,0,
-                                  this.canvasobj.width, this.canvasobj.height);
+                  this.canvasobj.width, this.canvasobj.height);
+        this.canvasctx.fillStyle = this.conf.bgcolor;
+        this.canvasctx.fillRect(0,0,this.canvasobj.width, this.canvasobj.height);
+
         //this.calc_minmax();
         this.draw_axes_grid(0,8,8);
         this.render();
@@ -334,10 +339,13 @@ function Chart(conf, plots) {
     this.render = function() {
         var i,j;
 
+        var explain=false;
+
         for (i in this.plots) {
             var thisplot=this.plots[i];
 
-            console.log("rendering plot",thisplot.name,"of",this.conf.divid,"ctx",this.canvasctx,
+            if (explain)
+                console.log("rendering plot",thisplot.name,"of",this.conf.divid,"ctx",this.canvasctx,
                         "color",thisplot.color);
 
             this.canvasctx.fillStyle=thisplot.color;
@@ -443,16 +451,19 @@ function Chart(conf, plots) {
         var axis_plot=this.plots[axis_index];
         var axis_linewidth=2;
 
+        var explain=false;
+
         this.canvasctx.strokeStyle='rgba(64,64,64,0.7)'; // TODO:
 
         var i;
-        console.log("axis data:",axis_plot.datapairs);
+        if (explain) console.log("axis data:",axis_plot.datapairs);
 
         var min_x_inuse, max_x_inuse;
 
-        // TODO: move this somehwere reusible
+        // TODO: move this somewhere reusible
         if (this.conf.single_x_axis) {
-            console.log("single x axis in use from",this.single_x_min,
+            if (explain) 
+                console.log("single x axis in use from",this.single_x_min,
                         "to",this.single_x_max);
 
             min_x_inuse=this.single_x_min;
@@ -463,11 +474,11 @@ function Chart(conf, plots) {
         }
 
         var dx=Math.round((max_x_inuse-min_x_inuse)/num_x),x;
-        console.log("min max x dx",min_x_inuse,max_x_inuse,dx);
+        if (explain) console.log("min max x dx",min_x_inuse,max_x_inuse,dx);
 
         if (dx<0.01) dx=1; //TODO:
 
-        console.log("minmax x",min_x_inuse,max_x_inuse);
+        if (explain) console.log("minmax x",min_x_inuse,max_x_inuse);
 
         this.canvasctx.strokeStyle='rgba(196,196,196,0.7)'; // TODO:
         this.canvasctx.fillStyle='rgba(196,196,196,0.7)';
@@ -480,7 +491,7 @@ function Chart(conf, plots) {
         for (i=min_x_inuse; i<max_x_inuse; i+=dx) {
             x=this.x2chart(i, axis_plot);
 
-            console.log("x vertical at x",i,"plot x",x);
+            if (explain) console.log("x vertical at x",i,"plot x",x);
 
             this.canvasctx.beginPath();
             this.canvasctx.lineWidth=axis_linewidth;
@@ -497,7 +508,7 @@ function Chart(conf, plots) {
 
 			var xlbl;
 
-			console.log("got to here",this.conf.x_label);
+			if (explain) console.log("got to here",this.conf.x_label);
             if (this.conf.x_label) {
 				console.log("using non-timeseries x label.");
 
@@ -508,7 +519,7 @@ function Chart(conf, plots) {
 					xlbl=Math.round(xlbl)+' min';
 				} else {
 					xlbl=(i-min_x_inuse);
-					xlbl=Math.round(xlbl)+' sec';
+					xlbl=Math.round(xlbl)+' '+this.conf.units;
 				}
 			}
 
@@ -524,6 +535,8 @@ function Chart(conf, plots) {
     this.draw_axes_grid=function(axis_i,num_x,num_y) {
         this.draw_x_axes(axis_i,num_x);
 
+        var explain=false;
+
         var axis_index=axis_i||0;
         var axis_plot=this.plots[axis_index];
         var axis_linewidth=2;
@@ -534,12 +547,12 @@ function Chart(conf, plots) {
         var max_y_inuse=(axis_plot.p_maxy)?axis_plot.p_maxy:axis_plot.max_y;
 
         var dy=Math.round((max_y_inuse-min_y_inuse)/num_y),y;
-        console.log("min max y dy",min_y_inuse,max_y_inuse,y);
+        if (explain) console.log("min max y dy",min_y_inuse,max_y_inuse,y);
 
         //var dy=Math.round(axis_plot.max_y/num_y);
 
         if (dy<=0.0) dy=0.2; // TODO:
-		console.log("dy is ", dy);
+		if (explain) console.log("dy is ", dy);
 
         for (i=0; i<axis_plot.max_y; i+=dy) {
             y=this.y2chart(i, axis_plot);

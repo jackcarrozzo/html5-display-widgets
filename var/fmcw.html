@@ -1,0 +1,144 @@
+<html>
+    <head>
+        <title>FMCW</title>
+    </head>
+    <link href="../css.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="../waterfall.js"></script>
+    <script type="text/javascript" src="../chart.js"></script>
+    <script type="text/javascript" src="../data/wfdata.js"></script>
+    <script type="text/javascript" src="../data/fmcwsums.js"></script>
+    <script type="text/javascript">
+
+    var do_websox=true;
+
+    function handle_ws_msg(msg) {
+        var m=JSON.parse(msg.data);
+        //console.log("got via ws: ",m);
+        //console.log(m.n);
+
+        do_chart_update(m);
+
+        wf.metadata.lastn=m.n||-1;
+        wf.metadata.samplefreq=m.sample_rate_hz||-1;
+        wf.metadata.triggerfreq=m.trig_freq_hz;
+        wf.metadata.winlength=1000*m.win_length_sec;
+
+        wf.update(m.fft_bin_slices);
+    }
+
+
+    if (do_websox) {
+        var uri="ws://localhost:5070/";
+
+         console.log("attempting ws connection to ",uri);
+         const ws = new WebSocket(uri);
+         ws.addEventListener('message', handle_ws_msg);
+         console.log("ws ok?",ws);
+    }
+
+    var wf=new Waterfall({});
+    var fftchart=new Chart({
+            id: "chart0",
+            height: 700,
+            width: 1200,
+            bgcolor: "#101010",
+            single_x_axis: true,
+            units: 'm'
+        },[{
+            type: "xy",
+            name: "fft",
+            color: "#00ff66",
+            ptsize: 2,
+            linesize: 1,
+            p_minx: 0,
+            p_miny: 0,
+            //x_propname: "x", // defaults
+            //y_propname: "y"
+   }]);
+
+    function make_fft_data_old() {
+        console.log("loading %d fft pts, %d hs sr.",
+            fftdata.fft_length, fftdata.sample_rate_hz);
+
+        var i,r=[];
+        for (i=0; i<fftdata.fft_length; i++) {
+            r[i]={x: fftdata.x_axis_m[i], y: fftdata.fft_bin_sums[i]}
+        }
+
+        return r;
+    }
+
+    function fft_slices_avg(slice_ars) {
+        var sums=[];
+        for (var bin=0;bin<slice_ars[0].length;bin++) {
+            for (var i=0;i<slice_ars.length;i++) {
+                sums[bin]=(sums[bin]||0)+slice_ars[i][bin];
+            }
+        }
+        for (var bin=0;bin<slice_ars[0].length;bin++) {
+            sums[bin]/=slice_ars.length;
+        }
+        return sums;
+    }
+
+    function munge_into_fft_chart_data(slicesobj) {
+        var numslices=slicesobj.num_fft_slices;
+        var sr=slicesobj.sample_rate_hz;
+
+        var xvals=slicesobj.x_axis_m;
+        //var xvals=slicesobj.x_axis_hz;
+        
+        var plot_ar=fft_slices_avg(slicesobj.fft_bin_slices);
+        //console.log("plot_ar is ",plot_ar);
+
+        var r=[];
+        for (i=0;i<plot_ar.length;i++) {
+            r[i]={x: slicesobj.x_axis_m[i], y: plot_ar[i]}
+        }
+
+        //console.log("return: ",r);
+        return r;
+    }
+
+    function do_chart_update(m) {
+        fftchart.update("fft", munge_into_fft_chart_data(m));
+    }
+
+    function init() {
+        console.log("init().");
+
+        fftchart.setup();
+
+        // load packaged data
+        /*
+        var munged_ar=make_fft_data_old();
+        console.log("munged ar: ",munged_ar);
+        fftchart.update("fft", munged_ar);
+        */
+
+        wf.setup();
+
+        // packaged data
+        //wf.update(waterfalldata.fft_bin_slices);
+        //console.log("waterfalldata is",waterfalldata);
+
+        //setTimeout(startsweep, 10000);
+        setInterval(do_render,200);
+    }
+
+    function do_render() {
+        wf.render();
+    }
+
+    function bump() {
+        console.log("bump was bumped.");
+    }
+
+    </script>
+    
+    <body onload="init();" bgcolor="#222">
+        <div id="chart0"></div><br>
+        <div id="waterfall0" style="display:inline-block;"></div><br>
+        <button onclick="bump()"> bump </button>
+    </body>
+</html>

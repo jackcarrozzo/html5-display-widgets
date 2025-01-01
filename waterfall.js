@@ -194,12 +194,16 @@ function Waterfall(conf) {
                 width, height);
         
         // TODO:
+        var bins=(this.datacrb.length>0)?this.datacrb[0].length:"?";
+        var trigfreq=Math.round(10*this.metadata.triggerfreq)/10;
+        var winlen=Math.round(10*this.metadata.winlength)/10;
+
         ctx.font = "16px Courier New";
         ctx.fillStyle="rgb(255,255,255,70%)";
         ctx.fillText("n:            "+this.metadata.lastn,xcorner+10,ycorner+20);
-        ctx.fillText("fft bins:     "+this.datacrb[0].length,xcorner+10,ycorner+40);
-        ctx.fillText("window len:   ",xcorner+10,ycorner+60);
-        ctx.fillText("trigger freq: ",xcorner+10,ycorner+80);
+        ctx.fillText("fft bins:     "+bins,xcorner+10,ycorner+40);
+        ctx.fillText("window len:   "+winlen+" ms",xcorner+10,ycorner+60);
+        ctx.fillText("trigger freq: "+trigfreq+" hz",xcorner+10,ycorner+80);
         ctx.fillText("sample freq:  "+this.metadata.samplefreq+" hz",xcorner+10,ycorner+100);
     }
 }
