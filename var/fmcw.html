@@ -10,8 +10,11 @@
     <script type="text/javascript">
 
     var do_websox=true;
+    var ws_enabled=true;
 
     function handle_ws_msg(msg) {
+        if (!ws_enabled) return;
+
         var m=JSON.parse(msg.data);
         //console.log("got via ws: ",m);
         //console.log(m.n);
@@ -21,7 +24,10 @@
         wf.metadata.lastn=m.n||-1;
         wf.metadata.samplefreq=m.sample_rate_hz||-1;
         wf.metadata.triggerfreq=m.trig_freq_hz;
+        wf.metadata.winlensamps=m.win_length_samps;
         wf.metadata.winlength=1000*m.win_length_sec;
+        wf.metadata.trigsinchunk=m.trigs_in_chunk;
+        wf.metadata.trigsinupdate=m.num_fft_slices;
 
         wf.update(m.fft_bin_slices);
     }
@@ -36,11 +42,18 @@
          console.log("ws ok?",ws);
     }
 
-    var wf=new Waterfall({});
+    var wf=new Waterfall({
+        height: 800,
+        width: 1200,
+        bgcolor: "#101010",
+        style: "border: 0px"
+    });
+    
     var fftchart=new Chart({
             id: "chart0",
             height: 700,
             width: 1200,
+            style: "border: 0px",
             bgcolor: "#101010",
             single_x_axis: true,
             units: 'm'
@@ -48,8 +61,8 @@
             type: "xy",
             name: "fft",
             color: "#00ff66",
-            ptsize: 2,
-            linesize: 1,
+            ptsize: 4,
+            linesize: 2,
             p_minx: 0,
             p_miny: 0,
             //x_propname: "x", // defaults
@@ -123,15 +136,26 @@
         //console.log("waterfalldata is",waterfalldata);
 
         //setTimeout(startsweep, 10000);
-        setInterval(do_render,200);
+        setInterval(do_render,300);
     }
 
     function do_render() {
+        fftchart.render_cb();
         wf.render();
     }
 
     function bump() {
         console.log("bump was bumped.");
+    }
+
+    function enable_ws() {
+        console.log("ws reenabled.");
+        ws_enabled=true;
+    }
+
+    function disable_ws() {
+        console.log("ws disabled.");
+        ws_enabled=false;
     }
 
     </script>
@@ -140,5 +164,7 @@
         <div id="chart0"></div><br>
         <div id="waterfall0" style="display:inline-block;"></div><br>
         <button onclick="bump()"> bump </button>
+        <button onclick="enable_ws()"> enable ws </button>
+        <button onclick="disable_ws()"> disable ws </button>
     </body>
 </html>

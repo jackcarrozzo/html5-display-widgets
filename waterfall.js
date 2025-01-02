@@ -25,10 +25,13 @@ function Waterfall(conf) {
         this.rowsupdated=-1;
 
         this.metadata={
-            lastn: 0,
-            samplefreq: 44100,
-            triggerfreq: 100,
-            winlength: 0.008
+            lastn: -9,
+            samplefreq: 99999,
+            triggerfreq: 199,
+            winlength: 0.999,
+            winlensamps: -999,
+            trigsinchunk: -99,
+            trigsinupdate: -9
         };
 
         this.vmin=0;
@@ -39,10 +42,17 @@ function Waterfall(conf) {
         this.xmax=(this.datacrb.length>0)?this.datacrb[0].length:256;
         this.ymax=this.conf.max_wf_rows;
 
+        /*
         this.winxmin=5; // TODO: configize
         this.winymin=5;
         this.winxmax=this.canvasobj.width-5;
         this.winymax=this.canvasobj.height-5;
+        */
+
+        this.winxmin=0;
+        this.winymin=0;
+        this.winxmax=this.canvasobj.width;
+        this.winymax=this.canvasobj.height;
     };
 
 	// TODO: set max number of slices to show regardless of size of list in;
@@ -150,10 +160,12 @@ function Waterfall(conf) {
 
         this.setminmaxes(data_ar);
 
-        this.canvasctx.clearRect(0,0,
-            this.canvasobj.width, this.canvasobj.height);
-
         var ctx = this.canvasctx;
+
+        ctx.clearRect(0,0,
+            this.canvasobj.width, this.canvasobj.height);
+        this.canvasctx.fillStyle = this.conf.bgcolor;
+        this.canvasctx.fillRect(0,0,this.canvasobj.width, this.canvasobj.height);
 
         var valwidth= this.x2chart(2)-this.x2chart(1);
         var valheight=1+this.y2chart(1)-this.y2chart(2);
@@ -180,8 +192,8 @@ function Waterfall(conf) {
     }
 
     this.render_box = function(ctx) {
-        var width=250;
-        var height=120;
+        var width=270;
+        var height=180;
         var from_right=100;
         var from_bottom=100;
 
@@ -194,16 +206,24 @@ function Waterfall(conf) {
                 width, height);
         
         // TODO:
+        var lastn=this.metadata.lastn;
         var bins=(this.datacrb.length>0)?this.datacrb[0].length:"?";
+        var samplefreq=this.metadata.samplefreq;
         var trigfreq=Math.round(10*this.metadata.triggerfreq)/10;
         var winlen=Math.round(10*this.metadata.winlength)/10;
+        var winlensamps=Math.round(10*this.metadata.winlensamps)/10;
+        var trigsinchunk=this.metadata.trigsinchunk;
+        var trigsinupdate=this.metadata.trigsinupdate;
 
         ctx.font = "16px Courier New";
         ctx.fillStyle="rgb(255,255,255,70%)";
-        ctx.fillText("n:            "+this.metadata.lastn,xcorner+10,ycorner+20);
-        ctx.fillText("fft bins:     "+bins,xcorner+10,ycorner+40);
-        ctx.fillText("window len:   "+winlen+" ms",xcorner+10,ycorner+60);
-        ctx.fillText("trigger freq: "+trigfreq+" hz",xcorner+10,ycorner+80);
-        ctx.fillText("sample freq:  "+this.metadata.samplefreq+" hz",xcorner+10,ycorner+100);
+        ctx.fillText("n:              "+lastn,xcorner+10,ycorner+20);
+        ctx.fillText("fft bins:       "+bins,xcorner+10,ycorner+40);
+        ctx.fillText("window len:     "+winlen+"  ms",xcorner+10,ycorner+60);
+        ctx.fillText("win samples:    "+winlensamps+" samp",xcorner+10,ycorner+80);
+        ctx.fillText("trigger freq:   "+trigfreq+"  hz",xcorner+10,ycorner+100);
+        ctx.fillText("trigs in msg:   "+trigsinupdate,xcorner+10,ycorner+120);
+        ctx.fillText("trigs in chunk: "+trigsinchunk,xcorner+10,ycorner+140);
+        ctx.fillText("sample freq:    "+samplefreq+" hz",xcorner+10,ycorner+160);
     }
 }

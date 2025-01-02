@@ -54,6 +54,8 @@ function Chart(conf, plots) {
             values: [], // raw things we get, incoming list
             datapairs: {} // indexed array of [x]->y, chart managed
         });
+    
+    this.updatessincerender=0;
     }
 
     console.log("created new chart",this.conf.divid,this,"with",this.plots.length,"plots.");
@@ -88,6 +90,7 @@ function Chart(conf, plots) {
         //this.draw_axes_grid(0,16,16);
         //this.render();
         //this.draw_legend();
+        this.updatessincerender=0;
     };
 
     this.find_plot_by_name = function(plotname) {
@@ -223,11 +226,17 @@ function Chart(conf, plots) {
         //console.log(this.conf.divid, plotname, "being refreshed with new pts:", newvalues.length);
 
         this.merge_new_data(plotname, newvalues);
+        this.updatessincerender++;
 
         //console.log("data merged, plotting:",this.plots[this.find_plot_by_name(plotname)]);
+    };
+
+    this.render_cb = function() {
+        if (this.updatessincerender==0) return;
+        this.updatessincerender=0;
 
         this.canvasctx.clearRect(0,0,
-                  this.canvasobj.width, this.canvasobj.height);
+              this.canvasobj.width, this.canvasobj.height);
         this.canvasctx.fillStyle = this.conf.bgcolor;
         this.canvasctx.fillRect(0,0,this.canvasobj.width, this.canvasobj.height);
 
