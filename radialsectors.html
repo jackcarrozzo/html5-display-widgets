@@ -1,0 +1,51 @@
+<html>
+    <head>
+        <title>Awesome Radial Viewer</title>
+    </head>
+    <link href="css.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="radialsectors.js"></script>
+    <script type="text/javascript">
+
+    var rs=new RadialSectors({height: 520, width: 1000});
+
+    function init() {
+       
+        rs.setup();
+
+        rs.render();
+
+        setTimeout(startsweep, 2000);
+    }
+
+    function startsweep() {
+        rs.update([
+            [9, 2, 10, 9, 8, 6, 2, 3],
+            [2, 0, 3, 1, 5, 2, 0, 0],
+            [4, 2, 5, 7, 2, 1, 2, 7],
+            [9, 5, 7, 9, 8, 6, 2, 5],
+            [9, 4, 9, 4, 7, 8, 0, 3],
+            [9, 1, 5, 9, 8, 6, 1, 2]]);
+
+        //setInterval(render_cb, 100);
+    }
+
+    function render_cb() {
+        /*for (i in gg) {
+            gg[i].update({valuea: currval, valueb: currval-5, valuec: currval+5, valued: currval+10});
+        }
+
+        if (1==currdir) {
+            currval++;
+            if (currval>=100) currdir=0;
+        } else {
+            currval--;
+            if (currval<=0) currdir=1;
+        }*/
+    }
+   
+    </script>
+    
+    <body onload="init();" bgcolor="#666">
+        <div id="radial0" style="display:inline-block;"></div> 
+    </body>
+</html>
