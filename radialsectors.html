@@ -3,6 +3,9 @@
         <title>Awesome Radial Viewer</title>
     </head>
     <link href="css.css" type="text/css" rel="stylesheet" />
+
+    <script type="text/javascript" src="data/radialfft.js"></script>
+
     <script type="text/javascript" src="radialsectors.js"></script>
     <script type="text/javascript">
 
@@ -18,13 +21,15 @@
     }
 
     function startsweep() {
-        rs.update([
+        /*rs.update([
             [9, 2, 10, 9, 8, 6, 2, 3],
             [2, 0, 3, 1, 5, 2, 0, 0],
             [4, 2, 5, 7, 2, 1, 2, 7],
             [9, 5, 7, 9, 8, 6, 2, 5],
             [9, 4, 9, 4, 7, 8, 0, 3],
-            [9, 1, 5, 9, 8, 6, 1, 2]]);
+            [9, 1, 5, 9, 8, 6, 1, 2]]);*/
+
+        rs.update(radialfft);
 
         //setInterval(render_cb, 100);
     }

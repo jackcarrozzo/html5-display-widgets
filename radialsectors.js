@@ -6,7 +6,7 @@ function RadialSectors(conf) {
         style:  conf.style  || "border:1px solid #fff",
         bgcolor: conf.bgcolor || '#222222',
         valuemin: conf.valuemin || 0,
-        valuemax: conf.valuemax || 100
+        valuemax: conf.valuemax || 100 // TODO: dont overwrite if manually set (this.conf.valuemax vs this.valuemax)
     };
 
     this.data = [ // TODO: make shape and gen thru conf
@@ -22,6 +22,7 @@ function RadialSectors(conf) {
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0]
     ];
+    this.valuemax=0;
 
     this.setup = function() {
         this.divobj = document.getElementById(this.conf.divid);
@@ -82,6 +83,7 @@ function RadialSectors(conf) {
 
         ctx.fillStyle = color;
         ctx.beginPath();
+        //console.log("rad origin x y is ",this.radial_origin_x,this.radial_origin_y," maxradius ",maxradius);
         ctx.arc(this.radial_origin_x, this.radial_origin_y,
             maxradius,
             largerangle,smallerangle,true); 
@@ -105,6 +107,16 @@ function RadialSectors(conf) {
         ctx.stroke();
     };
 
+    this.calcmax2d = function(inar) {
+        var max=inar[0][0];
+        for (i in inar) {
+            for (j in inar[0]) {
+                if (inar[i][j]>max) max=inar[i][j];
+            }
+        }
+        return max;
+    }
+
     this.docalcs = function() {
         this.radial_origin_x=this.canvasobj.width/2;
         this.radial_origin_y=this.canvasobj.height-(this.conf.bottompadding||5);
@@ -113,6 +125,8 @@ function RadialSectors(conf) {
 
     this.update = function(newdata) {
         this.data=newdata;
+        this.valuemax=this.calcmax2d(newdata);
+        console.log("valuemax: ",this.valuemax);
         this.render();
     }
 
@@ -132,8 +146,15 @@ function RadialSectors(conf) {
 
         var swp=this.sectorwpad||3;
         var shp=this.sectorhpad||2;
+
+        //TODO:
+        swp=0;
+        shp=0;
+
         var sectorwidth_deg=180/n_cols;
         var sectorheight=this.radial_max_r/n_rows;
+
+        console.log("sector height px ",sectorheight,", sector width deg ",sectorwidth_deg);
 
         for (var i=0;i<n_rows;i++) {
             for (var j=0;j<n_cols;j++) {
@@ -141,7 +162,7 @@ function RadialSectors(conf) {
                 var endtheta=((j+1)*sectorwidth_deg)-swp;
                 var highradius=((i+1)*sectorheight)-shp;
                 var lowradius=(i*sectorheight)+shp;
-                var byteval=Math.floor(25.5*this.data[j][i]);
+                var byteval=Math.floor(255*this.data[j][i]/this.valuemax);
                 var color=`rgb(
                     ${Math.floor(0)}
                     ${Math.floor(byteval)}
