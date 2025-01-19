@@ -12,6 +12,49 @@
     var do_websox=true;
     var ws_enabled=true;
 
+    function handle_wave(m) {
+        console.log("got wave obj: ",m);
+
+        var trigsamples=m.trigger_samples;
+        var trigdata=[];
+        for (var i in trigsamples) {
+            trigdata.push({ts: i, v: trigsamples[i]});
+        }
+
+        var signal0samples=m.signal_samples[0];
+        var wave0data=[];
+        for (var i in signal0samples) {
+            wave0data.push({ts: i, v: signal0samples[i]});
+        }
+
+        var edges_given=m.trigger_edges;
+        var edge_lineseg=1;
+        var edgelines=[];
+        for (var estart in edges_given) {
+            var eend=edges_given[estart];
+            console.log("doing edge from %d to %d",estart,eend);
+
+            edgelines.push({ts: parseInt(estart), v: 0.0});
+
+            var x=parseInt(estart);
+            while (x<=eend) {
+                //console.log("x: ",x);
+                //var v=0.1+Math.random();
+                var v=0.5;
+                edgelines.push({ts: x, v: v});
+                x++;
+            }
+
+            edgelines.push({ts: (x-1), v: 0.0});
+        }
+        console.log("edgelines: ",edgelines);
+
+        wavechart.update('trig', trigdata);
+        wavechart.update('wave0', wave0data);
+        wavechart.update('edges', edgelines);
+        wavechart.render_cb();
+    }
+
     function handle_ws_msg(msg) {
         if (!ws_enabled) return;
 
@@ -32,6 +75,8 @@
             wf.metadata.trigsinupdate=m.num_fft_slices;
 
             wf.update(m.fft_bin_slices);
+        } else if (m.type && m.type=='wave') {
+            handle_wave(m);
         } else {
             console.log("got ws update without known type: ",m);
         }
@@ -72,7 +117,41 @@
             p_miny: 0,
             //x_propname: "x", // defaults
             //y_propname: "y"
-   }]);
+    }]);
+
+    var wavechart=new Chart({
+            id: "chart1",
+            height: 400,
+            width: 1200,
+            single_x_axis: true
+        },[{
+            type: "xy",
+            name: "trig",
+            color: "#ffbb00",
+            ptsize: 2,
+            linesize: 1,
+            x_propname: 'ts',
+            y_propname: 'v'
+        },{
+            type: "xy",
+            name: "wave0",
+            color: "#ff33aa",
+            ptsize: 2,
+            linesize: 1,
+            x_propname: 'ts',
+            y_propname: 'v'
+        },{
+            type: "xy",
+            name: "edges",
+            color: "#3300ff",
+            ptsize: 6,
+            linesize: 2,
+            min_y: -1,
+            max_y: 1,
+            x_propname: 'ts',
+            y_propname: 'v'
+
+    }]);
 
     function make_fft_data_old() {
         console.log("loading %d fft pts, %d hs sr.",
@@ -140,6 +219,9 @@
         //wf.update(waterfalldata.fft_bin_slices);
         //console.log("waterfalldata is",waterfalldata);
 
+        wavechart.setup();
+
+
         //setTimeout(startsweep, 10000);
         setInterval(do_render,300);
     }
@@ -147,6 +229,7 @@
     function do_render() {
         fftchart.render_cb();
         wf.render();
+        wavechart.render_cb();
     }
 
     function bump() {
@@ -168,6 +251,7 @@
     <body onload="init();" bgcolor="#222">
         <div id="chart0"></div><br>
         <div id="waterfall0" style="display:inline-block;"></div><br>
+        <div id="chart1"></div><br>
         <button onclick="bump()"> bump </button>
         <button onclick="enable_ws()"> enable ws </button>
         <button onclick="disable_ws()"> disable ws </button>
