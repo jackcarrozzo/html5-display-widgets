@@ -124,38 +124,39 @@
        name: "p1",
        y_axis: "pr",
        color: "#00ffaa",
-       ptsize: 5,
+       ptsize: 3,
        //p_miny: 1,
        //p_minx:0,
-       x_propname: "ts",
-       y_propname: "v"
+       //x_propname: "ts",
+       //y_propname: "v"
      },{
        type: "xy",
        name: "t0",
        y_axis: "temp", // !!!!!! cust axes
        color: "#ff8800",
-       ptsize: 5,
+       ptsize: 3,
        //p_miny: 1,
-       x_propname: "ts",
-       y_propname: "v"
+       //x_propname: "ts",
+       //y_propname: "v"
      },{
        type: "xy",
        name: "t1",
        y_axis: "temp",
        color: "#eeaa00",
-       ptsize: 1,
+       ptsize: 1
        //p_miny: 1,
-       x_propname: "ts",
-       y_propname: "v"
+       //x_propname: "ts",
+       //y_propname: "v"
      },{
        type: "xy",
        name: "t2",
        y_axis: "temp",
        color: "#bbaa00",
-       ptsize: 1,
+       ptsize: 2,
+       linesize: 1
        //p_miny: 1,
-       x_propname: "ts",
-       y_propname: "v"
+       //x_propname: "ts",
+       //y_propname: "v"
      }
     ]),
     new Chart({
@@ -187,8 +188,9 @@ function make_fft_data() {
 
 	var i,r=[];
 	for (i=0; i<fftdata.fft_length; i++) {
-		r[i]={x: fftdata.x_axis_m[i], y: fftdata.fft_bin_sums[i]}
-	}
+	//	r[i]={x: fftdata.x_axis_m[i], y: (fftdata.fft_bin_sums[i]+(offset)?offset:0.0)}
+	    r[i]={x: fftdata.x_axis_m[i], y: (fftdata.fft_bin_sums[i])};
+    }
 
 	return r;
 }
@@ -204,7 +206,38 @@ function init() {
     }
 
 	var munged_ar=make_fft_data();
-	Charts[0].update("p0", munged_ar);
+
+    Charts[0].update("p0", munged_ar);
+
+    //var munged_ar2=munged_ar;
+    var munged_ar2=munged_ar.flatMap(element => [element]);
+    for (i in munged_ar2) {
+        munged_ar2[i].y+=(5+(10*Math.random()));
+    }
+
+    Charts[0].update("p1", munged_ar2);
+
+    var munged_ar3=munged_ar2.flatMap(element => [element]);
+    for (i in munged_ar3) {
+        munged_ar3[i].y+=(10+(6*Math.random()));
+    }
+
+    Charts[0].update("t0", munged_ar3);
+
+    var munged_ar4=munged_ar3.flatMap(element => [element]);
+    for (i in munged_ar4) {
+        munged_ar4[i].y+=(15+(10*Math.random()));
+    }
+
+    Charts[0].update("t1", munged_ar4);
+
+    var munged_ar5=munged_ar4.flatMap(element => [element]);
+    for (i in munged_ar5) {
+        munged_ar5[i].y+=(15+(10*Math.random()));
+    }
+
+    Charts[0].update("t2", munged_ar4);
+
 
      Charts[1].update("thing 2",
                       [
@@ -212,6 +245,13 @@ function init() {
                           {x:2.5, y:4},
                           {x:3.5, y:1.5}
                       ]);
+
+    Charts[0].draw_axes_grid(0,8,8);
+    Charts[0].render();
+    Charts[0].draw_legend();
+
+
+    Charts[1].render();
 }
 
  function bump() {
@@ -219,6 +259,7 @@ function init() {
 
      Charts[1].update("thing 2",
                       [{x:4.0, y:2.2}]);
+     Charts[1].render();
 
      load_data();
  }

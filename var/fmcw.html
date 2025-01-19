@@ -19,17 +19,22 @@
         //console.log("got via ws: ",m);
         //console.log(m.n);
 
-        do_chart_update(m);
 
-        wf.metadata.lastn=m.n||-1;
-        wf.metadata.samplefreq=m.sample_rate_hz||-1;
-        wf.metadata.triggerfreq=m.trig_freq_hz;
-        wf.metadata.winlensamps=m.win_length_samps;
-        wf.metadata.winlength=1000*m.win_length_sec;
-        wf.metadata.trigsinchunk=m.trigs_in_chunk;
-        wf.metadata.trigsinupdate=m.num_fft_slices;
+        if (m.type && (m.type=='waterfall')) {
+            do_chart_update(m);
 
-        wf.update(m.fft_bin_slices);
+            wf.metadata.lastn=m.n||-1;
+            wf.metadata.samplefreq=m.sample_rate_hz||-1;
+            wf.metadata.triggerfreq=m.trig_freq_hz;
+            wf.metadata.winlensamps=m.win_length_samps;
+            wf.metadata.winlength=1000*m.win_length_sec;
+            wf.metadata.trigsinchunk=m.trigs_in_chunk;
+            wf.metadata.trigsinupdate=m.num_fft_slices;
+
+            wf.update(m.fft_bin_slices);
+        } else {
+            console.log("got ws update without known type: ",m);
+        }
     }
 
 
