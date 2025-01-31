@@ -47,11 +47,26 @@
 
             edgelines.push({ts: (x-1), v: 0.0});
         }
-        console.log("edgelines: ",edgelines);
+        //console.log("edgelines: ",edgelines);
+        
+        //console.log("windowed and filtered samples: ", m.windowed_samples);
+
+        // just do first in series for now, and fill into first edge only:
+        var thesewins=m.windowed_samples[0];
+        var wins0data=[];
+        var estart=parseInt(Object.keys(m.trigger_edges)[0]);
+        var eend=m.trigger_edges[estart];
+
+		for (var i in thesewins) {
+			wins0data.push({ts: (parseInt(i)+estart), v: thesewins[i]});
+		}
+
+		//console.log("wins: ",wins0data);
 
         wavechart.update('trig', trigdata);
         wavechart.update('wave0', wave0data);
         wavechart.update('edges', edgelines);
+        wavechart.update('filt0', wins0data);
         wavechart.render_cb();
     }
 
@@ -151,6 +166,14 @@
             max_y: 1,
             x_propname: 'ts',
             y_propname: 'v'
+        },{
+           type: "xy",
+            name: "filt0",
+            color: "#bbcc22",
+            ptsize: 2,
+            linesize: 1,
+            x_propname: 'ts',
+            y_propname: 'v' 
 
     }]);
 
