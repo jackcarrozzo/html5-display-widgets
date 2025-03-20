@@ -91,6 +91,8 @@
 
             wf.update(m.fft_bin_slices);
         } else if (m.type && m.type=='wave') {
+            //console.log("got wave update: ",m);
+            //console.log("(wavechart: ",wavechart,")");
             handle_wave(m);
         } else {
             console.log("got ws update without known type: ",m);
@@ -99,8 +101,8 @@
 
 
     if (do_websox) {
-        var uri="ws://localhost:5070/";
-        // var uri="ws://localhost:5071/";
+         var uri="ws://localhost:5070/";
+         //var uri="ws://localhost:5071/";
 
          console.log("attempting ws connection to ",uri);
          const ws = new WebSocket(uri);
@@ -109,7 +111,7 @@
     }
 
     var wf=new Waterfall({
-        height: 800,
+        height: 500,
         width: 1200,
         bgcolor: "#101010",
         style: "border: 0px"
@@ -117,7 +119,7 @@
     
     var fftchart=new Chart({
             id: "chart0",
-            height: 700,
+            height: 600,
             width: 1200,
             style: "border: 0px",
             bgcolor: "#101010",
@@ -137,13 +139,13 @@
 
     var wavechart=new Chart({
             id: "chart1",
-            height: 400,
+            height: 300,
             width: 1200,
             single_x_axis: true
         },[{
             type: "xy",
             name: "trig",
-            color: "#ffbb00",
+            color: "#ff33aa", // ffbb00
             ptsize: 2,
             linesize: 1,
             x_propname: 'ts',
@@ -151,7 +153,7 @@
         },{
             type: "xy",
             name: "wave0",
-            color: "#ff33aa",
+            color: "#ffbb00", // ff33aa
             ptsize: 2,
             linesize: 1,
             x_propname: 'ts',
