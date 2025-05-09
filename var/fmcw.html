@@ -27,6 +27,8 @@
             wave0data.push({ts: i, v: signal0samples[i]});
         }
 
+        // TODO: handle better / still show waves if no edges are passed
+
         var edges_given=m.trigger_edges;
         var edge_lineseg=1;
         var edgelines=[];
@@ -47,9 +49,9 @@
 
             edgelines.push({ts: (x-1), v: 0.0});
         }
-        //console.log("edgelines: ",edgelines);
+        console.log("edgelines: ",edgelines);
         
-        //console.log("windowed and filtered samples: ", m.windowed_samples);
+        console.log("windowed and filtered samples: ", m.windowed_samples);
 
         // just do first in series for now, and fill into first edge only:
         var thesewins=m.windowed_samples[0];
@@ -101,8 +103,8 @@
 
 
     if (do_websox) {
-         var uri="ws://localhost:5070/";
-         //var uri="ws://localhost:5071/";
+         //var uri="ws://localhost:5070/";
+         var uri="ws://localhost:5071/";
 
          console.log("attempting ws connection to ",uri);
          const ws = new WebSocket(uri);
